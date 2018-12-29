@@ -4,12 +4,14 @@ const bcrypt = require('bcryptjs');
 const passport = require('passport');
 // Load User model
 const User = require('../models/User');
+
 // Login Page
 router.get('/login', (req, res) => res.render('login'));
 
 // Register Page
 router.get('/register', (req, res) => res.render('register'));
 
+// Register
 router.post('/register', (req, res) => {
     const {
         name,
@@ -67,13 +69,10 @@ router.post('/register', (req, res) => {
                     password
                 });
 
-                // Hash Password
                 bcrypt.genSalt(10, (err, salt) => {
                     bcrypt.hash(newUser.password, salt, (err, hash) => {
                         if (err) throw err;
-                        //Set Password to be hashed
                         newUser.password = hash;
-                        // Save User
                         newUser
                             .save()
                             .then(user => {
@@ -90,4 +89,21 @@ router.post('/register', (req, res) => {
         });
     }
 });
+
+// Login
+router.post('/login', (req, res, next) => {
+    passport.authenticate('local', {
+        successRedirect: '/dashboard',
+        failureRedirect: '/users/login',
+        failureFlash: true
+    })(req, res, next);
+});
+
+// Logout
+router.get('/logout', (req, res) => {
+    req.logout();
+    req.flash('success_msg', 'You are logged out');
+    res.redirect('/users/login');
+});
+
 module.exports = router;
